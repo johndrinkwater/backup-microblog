@@ -30,14 +30,14 @@ if __name__ == '__main__':
 	
 	if len(sys.argv) > 1:
 		URL = sys.argv[1]
-		if URL.find('atom'):
+		if URL.find('atom') is not -1:
 			URL = URL.replace('atom', 'json')
-		elif URL.find('rss'):
+		elif URL.find('rss') is not -1:
 			URL = URL.replace('rss', 'json')
 		else:
 			# fail?
 			pass
-		
+
 		if len(sys.argv) > 2:
 			location = sys.argv[2]
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 		# location doesn’t end in / (or \ win)
 
 		# loop here until end!
-		requestednotices = 33
+		requestednotices = 44
 		totalnotices = 0
 		requestedpage = 1
 		receivednotices = requestednotices
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 			except:
 				print "Failed"
 				sys.exit(-1)
-		
+
 			# how does this fail?
 			notices = json.loads(noticedata)
 		
@@ -81,7 +81,8 @@ if __name__ == '__main__':
 				#file.write( 'Location: %s', notice['user']['location'] )
 				file.write( "Id: %d\n" % notice['id'] )
 				# this is hardcoded, until we add service pulling from dir.laconi.ca
-				file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
+				#file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
+				file.write( "URI: http://twitter.com/johndrinkwater/status/%d\n" % notice['id'] )
 				file.write( "Source: %s\n" % notice['source'] )
 				if notice['in_reply_to_status_id'] is not None:
 					file.write( "In-Reply-To: %s\n" % notice['in_reply_to_status_id'] )
