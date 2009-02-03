@@ -8,7 +8,7 @@
 # Licence: GPL v3
 # Licence URL: http://www.gnu.org/licenses/gpl-3.0.html
 #
-import sys,os.path
+import sys,os.path, simplejson as json
 
 __version__ = "0.01"
 
