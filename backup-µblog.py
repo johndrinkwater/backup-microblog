@@ -100,7 +100,6 @@ if __name__ == '__main__':
 			totalnotices = totalnotices + receivednotices
 			print "Backed up %d dents so far." % totalnotices
 
-			sys.exit()
 			# sleep here for a little
 			print "Pausing to throttle hitting the server."
 			time.sleep( 10 )
