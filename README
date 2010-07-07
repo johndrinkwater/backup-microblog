@@ -17,3 +17,5 @@ Retweeting and replying are ignorant of the domain of that user, because this tw
 is ignorant of that. Once this supports the OStatus API, that will be fixed.
 
 This only saves your messages, not conversations that you reply to, or messages you receive.
+
+Doesn’t save attachments like images.
