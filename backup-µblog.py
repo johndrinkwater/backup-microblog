@@ -71,26 +71,51 @@ if __name__ == '__main__':
 		
 			# loop notices, make files
 			for notice in notices:
+
 				notice['timestamp'] = time.strptime( notice['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
 				notice['filename']  = unicode( os.path.join( location, time.strftime( "%FT%H%M%SZ", notice['timestamp'] ) ), encoding='utf-8', errors='ignore' )
+
 				print "Writing: %s %s" % ( os.path.basename( notice['filename'] ), notice['text'] )
-				
 				# test if file exists, if so, fail? (we’ve already backed this up)
 				file = codecs.open( notice['filename'], encoding='utf-8', mode='w+' )
-				# geolocation in the future?
-				#file.write( 'Location: %s', notice['user']['location'] )
-				file.write( "Id: %d\n" % notice['id'] )
+
+				file.write( "From: \"%s\" <%s@identi.ca>\n" % ( notice['user']['name'], notice['user']['screen_name'] ) )
+				file.write( "To: \"John Drinkwater\" <johndrinkwater@identi.ca>\n" )
+				file.write( "Subject: %s\n" % notice['text'][:60] )
+
+				file.write( "Message-ID: <%d@notice.identi.ca>\n" % notice['id'] )
+				file.write( "Date: %s\n" % time.strftime( "%a, %d %b %Y %H:%M:%S +0000", notice['timestamp'] ) )
 				# this is hardcoded, until we add service pulling from dir.laconi.ca
 				file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
 				#file.write( "URI: http://twitter.com/johndrinkwater/status/%d\n" % notice['id'] )
 				file.write( "Source: %s\n" % notice['source'] )
-				if notice['in_reply_to_status_id'] is not None:
-					file.write( "In-Reply-To: %s\n" % notice['in_reply_to_status_id'] )
-				if notice['in_reply_to_user_id'] is not None:
-					file.write( "In-Reply-To-User: %s\n" % notice['in_reply_to_user_id'] )
+				# Contained within Date, though in RFC 2822 format
+				# file.write( "Posted: %s\n" % time.strftime( "%FT%H:%M:%SZ", notice['timestamp'] ) )
+
+				# geo
+				if notice['geo'] is not None:
+					if notice['geo']['type'] == u'Point':
+						file.write( "Geolocation: %s\n" % notice['geo']['coordinates'] )
+					else:
+						print "Unsupported geo entry '" + notice['geo']['type'] + "'"
+
 				file.write( "Truncated: %s\n" % notice['truncated'] )
 				file.write( "Favourited: %s\n" % notice['favorited'] )
-				file.write( "Posted: %s\n" % time.strftime( "%FT%H:%M:%SZ", notice['timestamp'] ) )
+
+				# part of a conversation.
+				if notice['in_reply_to_status_id'] is not None:
+					file.write( "In-Reply-To: <%d@notice.identi.ca>\n" % notice['in_reply_to_status_id'] )
+				if notice['in_reply_to_user_id'] is not None:
+					file.write( "In-Reply-To-User: %s@identi.ca\n" % notice['in_reply_to_screen_name'] )
+
+				#retweeted
+				try:
+					if notice['retweeted_status'] is not None:
+						file.write( "Resent-Sender: \"%s\" <%s@identi.ca>\n" % ( notice['retweeted_status']['user']['name'], notice['retweeted_status']['user']['screen_name'] ) )
+						file.write( "Resent-Message-ID: <%d@notice.identi.ca>\n" % notice['retweeted_status']['id'] )
+				except:
+					pass				
+
 				file.write( "\n" )
 				file.write( "%s\n" % notice['text'] )
 				file.close()
