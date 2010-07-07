@@ -1,0 +1,19 @@
+backup-µblog is a little CLI tool for downloading and storing your twits or
+dents.
+
+Author: John Drinkwater, john@nextraweb.com
+Licence: GPL v3
+
+Running the tool as:
+./backup-µblog.py identi.ca user dents/
+will fill the dents directory with message/rfc822 files
+
+
+Known issues/TODO:
+Nothing is escaped properly to be valid RFC822, if you’re throwing UTF-8 like a sane person
+this programme ignores it and just writes it out. This will be fixed.
+
+Retweeting and replying are ignorant of the domain of that user, because this twitter API
+is ignorant of that. Once this supports the OStatus API, that will be fixed.
+
+This only saves your messages, not conversations that you reply to, or messages you receive.
