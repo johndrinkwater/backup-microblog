@@ -51,7 +51,7 @@ if __name__ == '__main__':
 		receivednotices = requestednotices
 
 
-		while receivednotices >= requestednotices:
+		while receivednotices > 0:
 			# fetch data
 			noticedata = ""
 			try:
@@ -81,8 +81,8 @@ if __name__ == '__main__':
 				#file.write( 'Location: %s', notice['user']['location'] )
 				file.write( "Id: %d\n" % notice['id'] )
 				# this is hardcoded, until we add service pulling from dir.laconi.ca
-				#file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
-				file.write( "URI: http://twitter.com/johndrinkwater/status/%d\n" % notice['id'] )
+				file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
+				#file.write( "URI: http://twitter.com/johndrinkwater/status/%d\n" % notice['id'] )
 				file.write( "Source: %s\n" % notice['source'] )
 				if notice['in_reply_to_status_id'] is not None:
 					file.write( "In-Reply-To: %s\n" % notice['in_reply_to_status_id'] )
@@ -99,11 +99,11 @@ if __name__ == '__main__':
 			receivednotices = len(notices)
 			requestedpage = requestedpage + 1
 			totalnotices = totalnotices + receivednotices
-			print "Backed up %d dents so far." % totalnotices
+			print "Backed up %d dents so far. [%d/%d]" % (totalnotices, receivednotices, requestednotices)
 
 			# sleep here for a little
 			print "Pausing to throttle hitting the server."
-			time.sleep( 10 )
+			time.sleep( 15 )
 
 	else:
 		printusage()
