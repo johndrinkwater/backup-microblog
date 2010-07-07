@@ -16,30 +16,36 @@ __version__ = "0.01"
 
 def printusage():
 	print "backup-µblog %s" % __version__
-	print "Usage: %s <SERVICE> [LOCATION]" % os.path.basename( __file__ )
+	print "Usage: %s <SERVICE> <USER> [LOCATION]" % os.path.basename( __file__ )
+	print "Service can be either twitter.com or identi.ca"
+	print "User is your handle on that service, without the @"
 	print "Location is optional, defaults to ."
-	# http://identi.ca/api/statuses/user_timeline/johndrinkwater.json
-	# http://twitter.com/statuses/user_timeline/608663.json
 	sys.exit(-1)
 
 if __name__ == '__main__':
 	
-	username = ""
-	password = ""
+	API = {"identi.ca": "http://identi.ca/api/statuses/user_timeline/%s.json",
+			"twitter.com": "http://api.twitter.com/1/statuses/user_timeline/%s.json" }
+	noticeURL = { "identi.ca":"http://identi.ca/notice/%(id)d\n", 
+				"twitter.com": "http://twitter.com/%(name)s/status/%(id)d\n"}
+
 	location = "."
 	
-	if len(sys.argv) > 1:
-		URL = sys.argv[1]
-		if URL.find('atom') is not -1:
-			URL = URL.replace('atom', 'json')
-		elif URL.find('rss') is not -1:
-			URL = URL.replace('rss', 'json')
-		else:
-			# fail?
-			pass
+	if len(sys.argv) > 2:
 
-		if len(sys.argv) > 2:
-			location = sys.argv[2]
+		# twitter.com or identi.ca
+		service = sys.argv[1]
+		username = sys.argv[2]
+		try:
+			URL = API.get( service ) % username
+		except:
+			# We don’t support generic StatusNet services yet.
+			print "Service not supported."
+			sys.exit(-1)
+
+		# We default to ‘.’
+		if len(sys.argv) > 3:
+			location = sys.argv[3]
 
 		location = os.path.realpath( location )
 		# location doesn’t end in / (or \ win)
@@ -51,7 +57,7 @@ if __name__ == '__main__':
 		receivednotices = requestednotices
 
 
-		while receivednotices > 0:
+		while receivednotices >= requestednotices:
 			# fetch data
 			noticedata = ""
 			try:
@@ -79,18 +85,16 @@ if __name__ == '__main__':
 				# test if file exists, if so, fail? (we’ve already backed this up)
 				file = codecs.open( notice['filename'], encoding='utf-8', mode='w+' )
 
-				file.write( "From: \"%s\" <%s@identi.ca>\n" % ( notice['user']['name'], notice['user']['screen_name'] ) )
-				file.write( "To: \"John Drinkwater\" <johndrinkwater@identi.ca>\n" )
+				file.write( "From: \"%s\" <%s@%s>\n" % ( notice['user']['name'], notice['user']['screen_name'], service ) )
+				file.write( "To: \"John Drinkwater\" <johndrinkwater@%s>\n" % (service) )
 				file.write( "Subject: %s\n" % notice['text'][:60] )
 
-				file.write( "Message-ID: <%d@notice.identi.ca>\n" % notice['id'] )
+				file.write( "Message-ID: <%d@notice.%s>\n" % (notice['id'], service) )
 				file.write( "Date: %s\n" % time.strftime( "%a, %d %b %Y %H:%M:%S +0000", notice['timestamp'] ) )
-				# this is hardcoded, until we add service pulling from dir.laconi.ca
-				file.write( "URI: http://identi.ca/notice/%d\n" % notice['id'] )
-				#file.write( "URI: http://twitter.com/johndrinkwater/status/%d\n" % notice['id'] )
+
+				file.write( "URI: %s\n" % noticeURL.get(service) % ({'name': username, 'id':notice['id']}) )
+
 				file.write( "Source: %s\n" % notice['source'] )
-				# Contained within Date, though in RFC 2822 format
-				# file.write( "Posted: %s\n" % time.strftime( "%FT%H:%M:%SZ", notice['timestamp'] ) )
 
 				# geo
 				if notice['geo'] is not None:
@@ -104,15 +108,15 @@ if __name__ == '__main__':
 
 				# part of a conversation.
 				if notice['in_reply_to_status_id'] is not None:
-					file.write( "In-Reply-To: <%d@notice.identi.ca>\n" % notice['in_reply_to_status_id'] )
+					file.write( "In-Reply-To: <%d@notice.%s>\n" % (notice['in_reply_to_status_id'], service) )
 				if notice['in_reply_to_user_id'] is not None:
-					file.write( "In-Reply-To-User: %s@identi.ca\n" % notice['in_reply_to_screen_name'] )
+					file.write( "In-Reply-To-User: %s@%s\n" % (notice['in_reply_to_screen_name'], service) )
 
 				#retweeted
 				try:
 					if notice['retweeted_status'] is not None:
-						file.write( "Resent-Sender: \"%s\" <%s@identi.ca>\n" % ( notice['retweeted_status']['user']['name'], notice['retweeted_status']['user']['screen_name'] ) )
-						file.write( "Resent-Message-ID: <%d@notice.identi.ca>\n" % notice['retweeted_status']['id'] )
+						file.write( "Resent-Sender: \"%s\" <%s@%s>\n" % ( notice['retweeted_status']['user']['name'], notice['retweeted_status']['user']['screen_name'], service ) )
+						file.write( "Resent-Message-ID: <%d@notice.%s>\n" % (notice['retweeted_status']['id'], service) )
 				except:
 					pass				
 
